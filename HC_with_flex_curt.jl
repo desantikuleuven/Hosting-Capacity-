@@ -12,10 +12,9 @@ const _IM = InfrastructureModels
 using DataFrames
 using XLSX
 
-include("C:/Users/u0152683/Desktop/Networks/PF simulation/My_functions.jl")
-include("C:/Users/u0152683/Desktop/Networks/PF simulation/My_ref/My_ref_lazy_DG_curtail.jl")
+include("C:/Workdir/Develop/PF_simulations/My_functions.jl")
+include("C:/Workdir/Develop/PF_simulations/My_ref/My_ref_lazy_DG_curtail.jl")
 include("HC_function_curt.jl")
-include("Ref_no_flex.jl")
 
 #Parameters
 
@@ -28,7 +27,7 @@ seed = 99                              # seed for random DG buses choice
 gen_number_per_feeder = 5              # number of random DGs per feeder
 power_target_per_feeder = 5            # total capacity installed in each feeder
 
-gen_step = 0.5                             # Incremental size of generation in MW
+gen_step = 1.5                             # Incremental size of generation in MW
 
 # Input file
 file_name = "Official_urban.m"
@@ -128,8 +127,8 @@ update_data!(net_data, losses)
 printing_statements_HC_flex_curt(feeder_HC, feeder_ID, net_data, result)
 
 
-#plot_grid_new(net_data, "p_flex")
+#plot_grid_new(net_data, "p_flex", "curtailment")
 #plot_grid_new(net_data, "vm" )
 feeder_curtailment = feeder_dg_curtailment(net_data, result, gen_ID)
 
-create_df_HC_flex_curt(feeder_HC, feeder_curtailment, true)
+create_df_HC_flex_curt(feeder_HC, feeder_curtailment)

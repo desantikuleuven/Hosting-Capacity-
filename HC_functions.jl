@@ -293,9 +293,9 @@ end
     ! No reactive injection taken into acocunt !
 
 =#
-function calc_hosting_capacity(net_data, ref, HC, power_target_per_feeder, threshold; feeder_ID_1, gen_ID, file_name, gen_number_per_feeder )
+function calc_hosting_capacity(net_data, ref, HC, gen_step, threshold; feeder_ID_1, gen_ID, file_name, gen_number_per_feeder )
     feeder_HC = Dict()
-    gen_step = power_target_per_feeder/gen_number_per_feeder
+    
     
     healthy_feeders = []
 
@@ -337,8 +337,8 @@ function calc_hosting_capacity(net_data, ref, HC, power_target_per_feeder, thres
                 if !volt_violation && !congestion_violation
 
                     gen_increase_size(net_data, gen_ID, f_name, gen_step)
-                    println("\n Increasing capacity generation at $f_name of $(power_target_per_feeder) MW")
-                    HC += power_target_per_feeder
+                    println("\n Increasing capacity generation at $f_name of ",gen_step * gen_number_per_feeder," MW")
+                    HC += gen_step * gen_number_per_feeder
                 else
                     #Reduce Pg of each gen to the previous safe generation value
                     feeder_HC[f_name] = Dict("HC"=> sum([gen["p_nominal"] - gen_step for (id, gen) in gen_ID if gen["feeder"] == f_name]))
@@ -389,7 +389,6 @@ end
 
 function calc_hosting_capacity_w_flex(net_data, ref, HC, gen_step; feeder_ID_1, gen_ID, gen_number_per_feeder )
     feeder_HC = Dict()
-    gen_step
     
     healthy_feeders = []
 
@@ -630,7 +629,6 @@ function solve_branch_voltage_cuts_HC!(data::Dict{String,<:Any}, model_type::Typ
                         
                         # in this case the solution should be feasible without going in the if statements
                         result = run_pf_simplified(data, ACPPowerModel, ref)
-                        #result = solve_branch_voltage_cuts_HC(data, ACPPowerModel, Ipopt.Optimizer, ref, gen_ID, feeder_ID_1, feeder_HC, gen_step, healthy_feeders)
                         update_data!(data, result) 
                         println(result["termination_status"])
 
@@ -1008,7 +1006,7 @@ function create_df_HC_flex(feeder_HC, save = false)
     if save
 
 
-        XLSX.openxlsx("C:\\Users\\u0152683\\Desktop\\Networks\\Hosting Capacity\\Results\\Results.xlsx", mode="rw") do xf
+        XLSX.openxlsx("Results\\Results.xlsx", mode="rw") do xf
             sheet = xf["DR"]
 
             column_names = names(df)

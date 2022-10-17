@@ -13,10 +13,10 @@ using DataFrames
 using XLSX
 using CSV
 
-include("C:/Users/u0152683/Desktop/Networks/PF simulation/My_functions.jl")
-include("C:/Users/u0152683/Desktop/Networks/PF simulation/My_ref/My_ref_lazy_DG_curtail.jl")
+
+include("C:/Workdir/Develop/PF_simulations/My_functions.jl")
+include("C:/Workdir/Develop/PF_simulations/My_ref/My_ref_lazy_DG_curtail.jl")
 include("HC_function_curt.jl")
-include("Ref_no_flex.jl")
 
 #Parameters
 
@@ -32,8 +32,8 @@ power_target_per_feeder = 5            # total capacity installed in each feeder
 gen_step = 0.1                            # Incremental size of generation in MW
 
 # Input file
-file_name = "Official_semiurban.m"
-file_path = "C://Users//u0152683//Desktop//Networks//Experiments//Official_semiurban.m"
+file_name = "Official_urban.m"
+file_path = "C://Users//u0152683//Desktop//Networks//Experiments//Official_urban.m"
 net_data = parse_file(file_path)
 
 #Add flexibility % that each load can offer

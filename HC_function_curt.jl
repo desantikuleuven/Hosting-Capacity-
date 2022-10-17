@@ -870,7 +870,7 @@ function create_df_HC_flex_curt(feeder_HC, feeder_curtailment, save = false)
 
     if save
         
-        XLSX.openxlsx("C:\\Users\\u0152683\\Desktop\\Networks\\Hosting Capacity\\Results\\Results.xlsx", mode="rw") do xf
+        XLSX.openxlsx("Results\\Results.xlsx", mode="rw") do xf
             sheet = xf["Curt"]
 
             column_names = names(df)

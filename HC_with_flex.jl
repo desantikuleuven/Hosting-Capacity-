@@ -12,14 +12,13 @@ const _IM = InfrastructureModels
 using DataFrames
 using XLSX
 
-include("C:/Users/u0152683/Desktop/Networks/PF simulation/My_functions.jl")
-include("C:/Users/u0152683/Desktop/Networks/PF simulation/My_ref/My_ref_lazy_flex.jl")
+include("C:/Workdir/Develop/PF_simulations/My_functions.jl")
+include("C:/Workdir/Develop/PF_simulations/My_ref/My_ref_lazy_flex.jl")
 include("HC_functions.jl")
-include("Ref_no_flex.jl")
 
 #Parameters
 
-flex = 0                              # flexibility offered %
+flex = 20                              # flexibility offered %
 congestion_limit = 100  	             # congestion limit %
 threshold = 100                        # value used to identify branches with current rating higher than threshold
 
@@ -27,7 +26,7 @@ seed = 99                              # seed for random DG buses choice
 gen_number_per_feeder = 5              # number of random DGs per feeder
 power_target_per_feeder = 5            # total capacity installed in each feeder
 
-step = 0.5                             # Incremental size of generation in MW
+step = 1.5                             # Incremental size of generation in MW
 
 # Input file
 file_name = "Official_urban.m"
@@ -87,4 +86,4 @@ printing_statements_HC_flex(feeder_HC, feeder_ID, flex_loads, p_load, q_load)
 #plot_grid_new(net_data, "p_flex")
 #plot_grid_new(net_data, "vm" )
 
-create_df_HC_flex(feeder_HC,true)
+create_df_HC_flex(feeder_HC)

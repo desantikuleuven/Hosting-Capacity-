@@ -14,8 +14,7 @@ const _IM = InfrastructureModels
 COMPUTE HOSTING CAPACITY WITHOUT FELXIBILITY 
 =#
 
-include("C:/Users/u0152683/Desktop/Networks/PF simulation/My_functions.jl")
-#include("C:/Users/u0152683/Desktop/Networks/PF simulation/My_ref/My_ref_lazy_ALL.jl")
+include("C:/Workdir/Develop/PF_simulations/My_functions.jl")
 include("HC_functions.jl")
 include("Ref_no_flex.jl")
 
@@ -24,29 +23,37 @@ file_name = "Official_rural.m"
 file_path = "C://Users//u0152683//Desktop//Networks//Experiments//Official_rural.m"
 net_data = parse_file(file_path)
 
+#Parameters
+
+flex = 0                              # flexibility offered %
+congestion_limit = 100  	             # congestion limit %
+threshold = 100                        # value used to identify branches with current rating higher than threshold
+
+seed = 99                              # seed for random DG buses choice
+gen_number_per_feeder = 5              # number of random DGs per feeder
+power_target_per_feeder = 5            # total capacity installed in each feeder
+
+step = 0.5                             # Incremental size of generation in MW
+
+
 # Add congestion capacity for each line
-congestion_limit = 100
-threshold = 100
 cong_cap = add_congestion_capacity(net_data, congestion_limit/100)
 update_data!(net_data, cong_cap)
 
 # Get feeder info 
-
 feeder_ID_1, mv_busbar = get_feeder_data(net_data, file_name)
 
 # Random choice of buses
-gen_number_per_feeder = 5 #number of random DGs per feeder
-random_generators = get_random_generators(feeder_ID_1, gen_number_per_feeder, 99)  
+random_generators = get_random_generators(feeder_ID_1, gen_number_per_feeder, seed)   
 
 # Add new generators
-power_target_per_feeder = 5
 size_std = power_target_per_feeder/gen_number_per_feeder  #size of each DG
 add_generators(net_data, random_generators, size_std)
 gen_ID = get_gen_info(net_data, feeder_ID_1)
 
 HC = power_target_per_feeder*length(feeder_ID_1) # initial HC value 
 
-feeder_HC, gen_ID = calc_hosting_capacity(net_data, build_ref_no_flex, HC, 0.5 , threshold; feeder_ID_1, gen_ID, file_name, gen_number_per_feeder )
+feeder_HC, gen_ID = calc_hosting_capacity(net_data, build_ref_no_flex, HC, step , threshold; feeder_ID_1, gen_ID, file_name, gen_number_per_feeder )
 
 [println(id," HC: ", feeder["HC"], " MW") for (id,feeder) in sort(feeder_HC)]
 
