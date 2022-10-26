@@ -23,17 +23,17 @@ include("HC_function_curt.jl")
 flex = 20                              # flexibility offered %
 congestion_limit = 100  	             # congestion limit %
 threshold = 100                        # value used to identify branches with current rating higher than threshold
-curtailment = 20                       # DG curtailment %
+curtailment = 0                       # DG curtailment %
 
 seed = 99                              # seed for random DG buses choice
 gen_number_per_feeder = 5              # number of random DGs per feeder
 power_target_per_feeder = 5            # total capacity installed in each feeder
 
-gen_step = 0.1                            # Incremental size of generation in MW
+gen_step = 0.1/5                            # Incremental size of generation in MW
 
 # Input file
-file_name = "Official_urban.m"
-file_path = "C://Users//u0152683//Desktop//Networks//Experiments//Official_urban.m"
+file_name = "Official_semiurban.m"
+file_path = "C://Users//u0152683//Desktop//Networks//Experiments//Official_semiurban.m"
 net_data = parse_file(file_path)
 
 #Add flexibility % that each load can offer
@@ -138,7 +138,7 @@ plot_info = sort(plot_info)
 
 [println(id," HC: ", feeder["HC"], " MW") for (id,feeder) in sort(feeder_HC)]
 
-plot_grid_new(net_data, "p_flex", "curtailment")
+#plot_grid_new(net_data, "p_flex", "curtailment")
 
 for f_name in feeder_names
 
@@ -196,8 +196,9 @@ for f_name in feeder_names
     file_name = replace(file_name, ".m" => " HC")
     file_name = uppercasefirst(file_name)
 
-    #XLSX.openxlsx(file_name*".xlsx", mode="rw") do xf
-    XLSX.openxlsx("test.xlsx", mode="rw") do xf
+    #XLSX.openxlsx("test3.xlsx", mode="rw") do xf
+    XLSX.openxlsx(file_name*".xlsx", mode="rw") do xf
+    
         try
             XLSX.addsheet!(xf, f_name)
         catch
@@ -218,4 +219,3 @@ for f_name in feeder_names
 end
 
         
-

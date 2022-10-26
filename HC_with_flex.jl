@@ -82,8 +82,10 @@ update_data!(net_data, losses)
 # Printing statements
 printing_statements_HC_flex(feeder_HC, feeder_ID, flex_loads, p_load, q_load)
 
-
-#plot_grid_new(net_data, "p_flex")
-#plot_grid_new(net_data, "vm" )
-
 create_df_HC_flex(feeder_HC)
+
+#Look at function description in My_functions to see which argument you can pass
+#bus, gen, branch
+plot_grid(net_data, "p_flex","basic", "loading"; display_flow = true)
+
+

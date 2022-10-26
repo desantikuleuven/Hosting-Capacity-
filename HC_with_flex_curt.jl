@@ -126,9 +126,12 @@ update_data!(net_data, losses)
 # Printing statements
 printing_statements_HC_flex_curt(feeder_HC, feeder_ID, net_data, result)
 
-
-#plot_grid_new(net_data, "p_flex", "curtailment")
-#plot_grid_new(net_data, "vm" )
 feeder_curtailment = feeder_dg_curtailment(net_data, result, gen_ID)
 
 create_df_HC_flex_curt(feeder_HC, feeder_curtailment)
+
+#Look at function description in My_functions to see which argument you can pass
+#bus, gen, branch
+plot_grid(net_data, "p_flex","curtailment", "loading"; display_flow = true)
+
+

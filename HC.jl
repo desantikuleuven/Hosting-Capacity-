@@ -130,4 +130,8 @@ println("\n Lowest voltage magnitude in the grid: ", minimum(vmin))
 [push!(vmin,feeder["vmax"]) for (id, feeder) in feeder_ID ]
 println("\n Highest voltage magnitude in the grid: ", maximum(vmin))
 
-plot_grid_new(net_data, "vm", true)
+#Look at function description in My_functions to see which argument you can pass
+#bus, gen, branch
+plot_grid(net_data, "basic","basic", "loading"; display_flow = true)
+
+
