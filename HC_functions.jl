@@ -136,6 +136,22 @@ function get_random_generators(feeder_ID_1, gen_number_per_feeder, seed_value::I
     return generators
 end
 
+# This function assigns only one axctive node randomly. Default samples are 1 
+function get_random_DG(seed::Int64,net_data::Dict; n_samples::Int64 = 1)
+    Random.seed!(seed)
+    passive_nodes = collect(keys(net_data["bus"]))
+    deleteat!(passive_nodes, findall(x->x=="1", passive_nodes))
+    deleteat!(passive_nodes, findall(x->x=="$mv_busbar", passive_nodes))
+
+    if n_samples >1
+        active_node = sample(passive_nodes,n_samples)
+    else
+        active_node = sample(passive_nodes,1)[1]
+    end
+
+    return active_node
+end
+
 #=
 Each generator will get installed a power equal to size_std. 
 These generators are added to the model. 
@@ -148,9 +164,23 @@ function add_generators(net_data::Dict, generators::Dict{Any, Any}, size_std)
 
     for (i,gen) in enumerate(x)
         i+=1
-        net_data["gen"]["$i"] = Dict("pg" =>size_std, "qg" =>0, "pmin" => size_std , "pmax"=> size_std , "qmin" =>0, "qmax"=>0, "gen_bus" => gen, "gen_status"=>1, "index" => i, "source_id" => ["gen", i])
+        net_data["gen"]["$i"] = Dict("p_nominal" => size_std, "q_nominal"=>0,"pg" =>size_std, "qg" =>0, "pmin" => size_std , "pmax"=> size_std , "qmin" =>0, "qmax"=>0, "gen_bus" => gen, "gen_status"=>1, "index" => i, "source_id" => ["gen", i])
         net_data["bus"]["$gen"]["bus_type"] = 2
     end
+end
+
+# Add generator with curtailment capabilities 
+function add_single_generator(net_data::Dict, size, gen)
+
+    if isa(gen, String)
+        gen = parse(Int64, gen)
+    end
+    
+    i = length(net_data["gen"]) + 1
+
+    net_data["gen"]["$i"] = Dict("p_nominal" => size, "q_nominal"=>0, "pg" =>size, "qg" =>0, "pmin" => size, "pmax"=>size, "qmin" =>0, "qmax"=>0, "gen_bus" => gen, "gen_status"=>1, "index" => i, "source_id" => ["gen", i])
+    net_data["bus"]["$gen"]["bus_type"] = 2
+    
 end
 
 function get_gen_info(net_data::Dict, feeder_ID::Dict)
@@ -170,7 +200,7 @@ function get_gen_info(net_data::Dict, feeder_ID::Dict)
             end
 
             if present && gen["gen_bus"]!="1"  #exclude slack generator
-                generator_ID[i] = Dict("ref" => j, "feeder"=> feeder["Name"], "bus"=>gen["gen_bus"],"pmin" => gen["pmin"], "p_nominal" => gen["pg"], "q_nominal"=> gen["qg"])
+                generator_ID[i] = Dict("ref" => j, "feeder"=> feeder["Name"], "bus"=>gen["gen_bus"],"pmin" => gen["pmin"], "p_nominal" => gen["p_nominal"], "q_nominal"=> gen["q_nominal"])
             end
         end
     end
@@ -187,6 +217,7 @@ function gen_increase_size(net_data, gen_ID, feeder, additional_power)
         for (id,gen) in gen_ID
 
             if gen["feeder"] == feeder_name
+                net_data["gen"][id]["p_nominal"] += additional_power
                 net_data["gen"][id]["pg"] += additional_power
                 net_data["gen"][id]["pmax"] += additional_power
                 net_data["gen"][id]["pmin"] += additional_power
@@ -202,6 +233,7 @@ function update_gens(net_data, gen_ID)
 
     for (id, gen) in gen_ID
         net_data["gen"][id]["pg"] = gen["p_nominal"]
+        net_data["gen"][id]["p_nominal"] = gen["p_nominal"]
     end
 
 end
@@ -578,7 +610,6 @@ function solve_branch_voltage_cuts_HC!(data::Dict{String,<:Any}, model_type::Typ
                         [println(" - $feeder ", sum([gen["p_nominal"] for (id, gen) in gen_ID if gen["feeder"] == feeder]), " MW") for feeder in sort(violated_feeders)]
                         
                         println("\n Running PF")
-                        update_gens(data, gen_ID)
                         result = run_pf_simplified(data, ACPPowerModel, ref) #Run basically solve_branch_voltage_cuts_HC! without all these if statements
 
                         if result["termination_status"] != LOCALLY_SOLVED  # flex insufficient to save f_name

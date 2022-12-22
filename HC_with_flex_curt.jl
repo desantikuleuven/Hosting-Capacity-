@@ -31,7 +31,7 @@ gen_step = 1.5                             # Incremental size of generation in M
 
 # Input file
 file_name = "Official_urban.m"
-file_path = "C://Users//u0152683//Desktop//Networks//Experiments//Official_urban.m"
+file_path = "C://Workdir//Develop//"*file_name
 net_data = parse_file(file_path)
 
 #Add flexibility % that each load can offer
@@ -52,6 +52,8 @@ random_generators = get_random_generators(feeder_ID_1, gen_number_per_feeder, se
 # Add new generators
 size_std = power_target_per_feeder/gen_number_per_feeder  #size of each DG
 add_generators(net_data, random_generators, size_std, curtailment/100)
+
+# Create dict for DGs (CALL ONLY BEFORE PF)
 gen_ID = get_gen_info(net_data, feeder_ID_1)
 
 HC = power_target_per_feeder*length(feeder_ID_1) # initial HC value 
@@ -100,20 +102,16 @@ end
 
 update_data!(net_data, result["solution"])
 
-
 # Print results
 
 [println(id," HC: ", feeder["HC"], " MW") for (id,feeder) in sort(feeder_HC)]
 
-# Compute voltage profiles
-feeder_ID, path_volt, mv_busbar = calc_voltage_profile(net_data, result, file_name)
+# Voltage profiles: specify path if you want to save
+save_path =  ""
+feeder_ID, path_volt, mv_busbar = calc_voltage_profile(net_data, result, file_name, save_path, true, true, false)
+
+# Add branch loadings to net_data
 calc_branch_loading(net_data, feeder_ID, gen_ID, threshold)
-
-# Evaluate types of violations occurred in feeders
-add_violation_type_flex(net_data, feeder_ID, feeder_HC)
-
-# Claculate flexibility offered 
-flex_loads, p_load, q_load = calc_flexibility_offered_new(net_data, result)
 
 # Compute branch flows and losses
 
@@ -123,15 +121,22 @@ update_data!(net_data, flows)
 losses, p_loss, q_loss = calc_power_losses(net_data)
 update_data!(net_data, losses)
 
+# Evaluate types of violations occurred in feeders
+add_violation_type_flex(net_data, feeder_ID, feeder_HC)
+
+# Claculate flexibility offered 
+flex_loads, p_load, q_load = calc_flexibility_offered_new(net_data, result)
+
 # Printing statements
 printing_statements_HC_flex_curt(feeder_HC, feeder_ID, net_data, result)
 
+# Add curtailment info to gen_ID, net_data and create new dict 
 feeder_curtailment = feeder_dg_curtailment(net_data, result, gen_ID)
 
 create_df_HC_flex_curt(feeder_HC, feeder_curtailment)
 
 #Look at function description in My_functions to see which argument you can pass
 #bus, gen, branch
-plot_grid(net_data, "p_flex","curtailment", "loading"; display_flow = true)
+plot_grid(net_data, "p_flex","curtailment","loading"; zoom =false, display_flow = false, save_fig = false)
 
 

@@ -136,6 +136,36 @@ function get_random_generators(feeder_ID_1, gen_number_per_feeder, seed_value::I
     return generators
 end
 
+# This function assigns only one axctive node randomly. Default samples are 1 
+function get_random_DG(seed::Int64,net_data::Dict; n_samples::Int64 = 1)
+    Random.seed!(seed)
+    passive_nodes = collect(keys(net_data["bus"]))
+    deleteat!(passive_nodes, findall(x->x=="1", passive_nodes))
+    deleteat!(passive_nodes, findall(x->x=="$mv_busbar", passive_nodes))
+
+    if n_samples >1
+        active_node = sample(passive_nodes,n_samples)
+    else
+        active_node = sample(passive_nodes,1)[1]
+    end
+
+    return active_node
+end
+
+# Add generator with curtailment capabilities 
+function add_single_generator(net_data::Dict, size, gen; curt::Float64=0.0)
+
+    if isa(gen, String)
+        gen = parse(Int64, gen)
+    end
+    
+    i = length(net_data["gen"]) + 1
+
+    net_data["gen"]["$i"] = Dict("p_nominal" => size, "q_nominal"=>0, "pg" =>size, "qg" =>0, "pmin" => size * (1-curt), "pmax"=>size, "qmin" =>0, "qmax"=>0, "gen_bus" => gen, "gen_status"=>1, "index" => i, "source_id" => ["gen", i])
+    net_data["bus"]["$gen"]["bus_type"] = 2
+    
+end
+
 #=
 Each generator will get installed a power equal to size_std. 
 These generators are added to the model. 
@@ -148,10 +178,12 @@ function add_generators(net_data::Dict, generators::Dict{Any, Any}, size_std, cu
 
     for (i,gen) in enumerate(x)
         i+=1
-        net_data["gen"]["$i"] = Dict("pg" =>size_std, "qg" =>0, "pmin" => size_std * (1-curt) , "pmax"=> size_std , "qmin" =>0, "qmax"=>0, "gen_bus" => gen, "gen_status"=>1, "index" => i, "source_id" => ["gen", i])
+        net_data["gen"]["$i"] = Dict("p_nominal" => size_std, "q_nominal"=>0, "pg" =>size_std, "qg" =>0, "pmin" => size_std * (1-curt) , "pmax"=> size_std , "qmin" =>0, "qmax"=>0, "gen_bus" => gen, "gen_status"=>1, "index" => i, "source_id" => ["gen", i])
         net_data["bus"]["$gen"]["bus_type"] = 2
     end
 end
+
+
 
 # Create a dictionary with all relevant info about generators 
 function get_gen_info(net_data::Dict, feeder_ID::Dict)
@@ -171,7 +203,7 @@ function get_gen_info(net_data::Dict, feeder_ID::Dict)
             end
 
             if present && gen["gen_bus"]!="1"  #exclude slack generator
-                generator_ID[i] = Dict("ref" => j, "feeder"=> feeder["Name"], "bus"=>gen["gen_bus"], "p_nominal" => gen["pg"], "q_nominal"=> gen["qg"])
+                generator_ID[i] = Dict("ref" => j, "feeder"=> feeder["Name"], "bus"=>gen["gen_bus"], "p_nominal" => gen["p_nominal"], "q_nominal"=> gen["q_nominal"])
             end
         end
     end
@@ -185,6 +217,7 @@ end
 function update_gens(net_data, gen_ID)
 
     for (id, gen) in gen_ID
+        net_data["gen"][id]["p_nominal"] = gen["p_nominal"]
         net_data["gen"][id]["pg"] = gen["p_nominal"]
         net_data["gen"][id]["pmax"] = gen["p_nominal"]
         net_data["gen"][id]["pmin"] = gen["p_nominal"] * (1-net_data["curtail"]/100)
@@ -200,6 +233,7 @@ function gen_increase_size(net_data, gen_ID, feeder, additional_power)
         for (id,gen) in gen_ID
 
             if gen["feeder"] == feeder_name
+                net_data["gen"][id]["p_nominal"] += additional_power
                 net_data["gen"][id]["pg"] += additional_power
                 net_data["gen"][id]["pmax"] += additional_power
                 net_data["gen"][id]["pmin"] = net_data["gen"][id]["pg"] * (1-net_data["curtail"]/100)
@@ -272,15 +306,20 @@ function feeder_dg_curtailment(net_data, result, gen_ID)
 
     for (i, gen) in result["solution"]["gen"]
         if i!="1"
+            f_name = gen_ID[i]["feeder"]
             p_nominal = net_data["gen"][i]["pmax"]
             p_final = gen["pg"]
             curtail = p_nominal - p_final
       
             if curtail > 10^-4
-                push!(feeder_curtailment[gen_ID[i]["feeder"]], i=> Dict("curtail_%" => round(curtail/p_nominal, digits = 4)*100 , "curtail_abs" => curtail))
-                net_data["gen"][i]["curtailment"] = round(curtail/p_nominal, digits = 4)*100  #update net_data
+                perc_curt = round(curtail/p_nominal, digits = 4)*100  # % curtailment
+
+                push!(feeder_curtailment[f_name], i=> Dict("curtail_%" => perc_curt , "curtail_abs" => curtail))
+                net_data["gen"][i]["curtailment"] = perc_curt  #update net_data
+                gen_ID[i]["curtailment"] = perc_curt  # update gen_ID
             else
                 net_data["gen"][i]["curtailment"] = 0 
+                gen_ID[i]["curtailment"] = 0
             end
         end
     end

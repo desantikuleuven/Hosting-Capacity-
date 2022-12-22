@@ -26,11 +26,11 @@ seed = 99                              # seed for random DG buses choice
 gen_number_per_feeder = 5              # number of random DGs per feeder
 power_target_per_feeder = 5            # total capacity installed in each feeder
 
-step = 1.5                             # Incremental size of generation in MW
+step = 0.5                             # Incremental size of generation in MW
 
 # Input file
 file_name = "Official_urban.m"
-file_path = "C://Users//u0152683//Desktop//Networks//Experiments//Official_urban.m"
+file_path = "C://Workdir//Develop//"*file_name
 net_data = parse_file(file_path)
 
 #Add flexibility % that each load can offer
@@ -50,6 +50,8 @@ random_generators = get_random_generators(feeder_ID_1, gen_number_per_feeder, se
 # Add new generators
 size_std = power_target_per_feeder/gen_number_per_feeder  #size of each DG
 add_generators(net_data, random_generators, size_std)
+
+# Create dict for DGs (CALL ONLY BEFORE PF)
 gen_ID = get_gen_info(net_data, feeder_ID_1)
 
 HC = power_target_per_feeder*length(feeder_ID_1) # initial HC value 
@@ -61,8 +63,11 @@ feeder_HC, gen_ID = calc_hosting_capacity_w_flex(net_data, build_pf_all_flex_laz
 
 [println(id," HC: ", feeder["HC"], " MW") for (id,feeder) in sort(feeder_HC)]
 
-# Compute voltage profiles
-feeder_ID, path_volt, mv_busbar = calc_voltage_profile(net_data, result, file_name)
+# Voltage profiles: specify path if you want to save
+save_path =  ""
+feeder_ID, path_volt, mv_busbar = calc_voltage_profile(net_data, result, file_name, save_path)
+
+# Add branch loadings to net_data
 calc_branch_loading(net_data, feeder_ID, gen_ID, threshold)
 
 # Evaluate types of violations occurred in feeders
@@ -86,6 +91,5 @@ create_df_HC_flex(feeder_HC)
 
 #Look at function description in My_functions to see which argument you can pass
 #bus, gen, branch
-plot_grid(net_data, "p_flex","basic", "loading"; display_flow = true)
-
+plot_grid(net_data, "p_flex","basic","loading"; zoom =false, display_flow = false, save_fig = false)
 
