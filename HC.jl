@@ -20,7 +20,7 @@ include("Ref_no_flex.jl")
 
 # Input file
 file_name = "Official_rural.m"
-file_path = "C://Users//u0152683//Desktop//Networks//Experiments//Official_rural.m"
+file_path = "C://Users//u0152683//Desktop//Experiments//Official_rural.m"
 net_data = parse_file(file_path)
 
 #Parameters

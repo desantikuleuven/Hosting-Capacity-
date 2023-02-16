@@ -31,7 +31,7 @@ gen_step = 1.5                             # Incremental size of generation in M
 
 # Input file
 file_name = "Official_urban.m"
-file_path = "C://Workdir//Develop//"*file_name
+file_path = "C:/Workdir//Develop//"*file_name
 net_data = parse_file(file_path)
 
 #Add flexibility % that each load can offer

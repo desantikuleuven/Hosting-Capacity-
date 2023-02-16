@@ -171,7 +171,7 @@ Each generator will get installed a power equal to size_std.
 These generators are added to the model. 
 The list of generators are passed as a Dict, where you give a list of buses for each feeders. This is done by calling before get_random_generators
 =#
-function add_generators(net_data::Dict, generators::Dict{Any, Any}, size_std, curt)
+function add_generators(net_data::Dict, generators::Dict{Any, Any}, size_std; curt::Float64=0.0)
     
     x = []
     [append!(x,v) for v in values(generators)]

@@ -141,7 +141,7 @@ function get_random_DG(seed::Int64,net_data::Dict; n_samples::Int64 = 1)
     Random.seed!(seed)
     passive_nodes = collect(keys(net_data["bus"]))
     deleteat!(passive_nodes, findall(x->x=="1", passive_nodes))
-    deleteat!(passive_nodes, findall(x->x=="$mv_busbar", passive_nodes))
+    #deleteat!(passive_nodes, findall(x->x=="$mv_busbar", passive_nodes))
 
     if n_samples >1
         active_node = sample(passive_nodes,n_samples)
